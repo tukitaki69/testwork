@@ -1,7 +1,6 @@
 const http = require('http');
 const url = require('url');
 const request = require('request');
-const res = require("express/lib/response");
 
 let port = 3000;
 

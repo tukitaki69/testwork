@@ -13,7 +13,7 @@ function coinCapCurrency(req, res) {
         if (currency == null || currency === '') {
             res.writeHead(404, {'Content-type': 'application/json'});
             res.write(JSON.stringify({
-                error: 'required parameter'
+                error: 'missing required currency parameter'
             }))
         } else {
             request({

@@ -1,13 +1,11 @@
 const http = require('http');
 const url = require('url');
-const request = require('request');
+const request = require('request-promise');
 
 let port = 3000;
 
 function coinCapCurrency(req, res) {
-
     let url_parts = url.parse(req.url, true);
-
     if (url_parts.pathname === '/rates') {
         let currency = url_parts.query['currency'];
         if (currency == null || currency === '') {
@@ -15,36 +13,41 @@ function coinCapCurrency(req, res) {
             res.write(JSON.stringify({
                 error: 'missing required currency parameter'
             }))
+            res.end()
         } else {
             request({
-                followAllRedirect: true,
-                url: 'https://api.coincap.io/v2/rates' + '/' + currency
-            }, function (error, responce, body) {
-                if (!error) {
+                method: 'GET',
+                uri: 'https://api.coincap.io/v2/rates' + '/' + currency,
+                json: true
+            }).then(
+                function (resolve) {
                     try {
-                        let parsedJSON = JSON.parse(body)
                         res.writeHead(200, {'Content-type': 'application/json'});
                         res.write(JSON.stringify({
-                            usd: parsedJSON['data']['rateUsd']
+                            usd: resolve['data']['rateUsd']
                         }))
                     } catch (err) {
                         console.error(err);
-                        returnError(res);
+                        onError(res);
                     } finally {
                         res.end()
                     }
-                } else {
+                },
+                function (error) {
                     console.log(error);
-                    returnError(res);
+                    onError(res);
                     res.end()
                 }
-
-            })
+            )
         }
+
+    } else {
+        onError(res);
+        res.end()
     }
 }
 
-function returnError(response) {
+function onError(response) {
     response.writeHead(404, {'Content-type': 'application/json'});
     response.write(JSON.stringify({
         error: 'invalid request'
